@@ -4,7 +4,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stianeikeland/go-rpio/v4"
 	"sync"
-	"time"
+)
+
+const (
+	freq = 64000
 )
 
 func init() {
@@ -15,87 +18,109 @@ func init() {
 }
 
 type machine struct {
+	// name 组合名
 	name string
-	pwm  uint8
-	in1  uint8
-	in2  uint8
+	// pwm pwm引脚，一般为GPIO12、GPIO13、GPIO18、GPIO19，树莓派引脚说明：
+	pwm uint8
+	// in1 直流电机的输入引脚
+	in1 uint8
+	// in2 直流电机的输入引脚
+	in2 uint8
 }
 
-var machines = []machine{
-	{"1", 12, 20, 21},
-	{"2", 19, 26, 06},
-	{"3", 18, 23, 24},
-	{"3", 13, 22, 27},
-}
+var (
+	frontLeft  = machine{"左前轮", 12, 20, 21}
+	frontRight = machine{"前右轮", 19, 26, 06}
+	rearLeft   = machine{"后左轮", 18, 23, 24}
+	rearRight  = machine{"后右轮", 13, 22, 27}
+	// machines 配置好的4个直流电机引脚
+	machines = []machine{frontLeft, frontRight, rearLeft, rearRight}
+)
 
-type pwmRunController struct {
-	Run bool
-}
+var (
+	// cycleLen PWM 周期长度
+	cycleLen uint32 = 32
+	// DutyLen PWM 占空长度，值越大，表示电压越高,最大值不超过cycleLen = 32
+	DutyLen = cycleLen
 
-func pwmRun(pwmP *rpio.Pin, cycleLen uint32, run *pwmRunController) {
-	for run.Run {
-		for i := uint32(0); i < cycleLen; i++ { // increasing brightness
-			logrus.Infof("increasing brightness:%d", i)
-			pwmP.DutyCycle(i, cycleLen)
-		}
-		for i := cycleLen; i > 0; i-- { // decreasing brightness
-			logrus.Infof("decreasing brightness:%d", i)
-			pwmP.DutyCycle(i, cycleLen)
-		}
+	//最大偏转角度
+	maxDegree uint32 = 40
+)
+
+var (
+	runningCh = make(chan bool)
+)
+
+func running(pwm, in1, in2 uint8, dutyLen uint32, forward func(pin1, pin2 rpio.Pin), ch chan bool) {
+	if dutyLen > cycleLen {
+		dutyLen = cycleLen
 	}
-
-}
-
-var cycleLen uint32 = 32
-
-func runDuty(pwmP *rpio.Pin, dutyLen uint32, b *pwmRunController) {
-	b.Run = true
-	go pwmRun(pwmP, dutyLen, b)
-	time.Sleep(5 * time.Second)
-	b.Run = false
-}
-func initPin(pwm, in1, in2 uint8) {
 	pwmP := rpio.Pin(pwm)
 	pin1 := rpio.Pin(in1)
 	pin2 := rpio.Pin(in2)
+	defer func() {
+
+		pin1.Low()
+		logrus.Infof("设置[%v]为低电位", pin1)
+		pin2.Low()
+		logrus.Infof("设置[%v]为低电位", pin2)
+		pwmP.Low()
+		logrus.Infof("设置[%v]为低电位", pwmP)
+	}()
 	logrus.Infof("pwmP:%v,pin1:%v,pin2:%v", pwmP, pin1, pin2)
-
-	rpio.WritePin(pin1, rpio.High)
-	rpio.WritePin(pin2, rpio.Low)
-
-	logrus.Infof("全速转速...")
-	pwmP.Mode(rpio.Output)
-	rpio.WritePin(pwmP, rpio.High)
-	defer rpio.WritePin(pwmP, rpio.Low)
-	time.Sleep(5 * time.Second)
-
-	//pwmP.Mode(rpio.Pwm)
-	//pwmP.Freq(64000)
-	//
-	//logrus.Infof("最高转速...")
-	//pwmP.DutyCycle(32,32)
-	//time.Sleep(5 * time.Second)
-	// the LED will be blinking at 2000Hz
-	// (source frequency divided by cycle length => 64000/32 = 2000)
-
-	// five times smoothly fade in and out
-
-	//runDuty(&pwmP,32,&pwmRunController{true})
-
-	logrus.Info("停止...")
-	rpio.WritePin(pin1, rpio.Low)
-	//rpio.WritePin(pin2,rpio.Low)
-	//pwmP.DutyCycle(0,32)
+	//控制正转还是倒转
+	forward(pin1, pin2)
+	pwmP.Mode(rpio.Pwm)
+	pwmP.Freq(freq)
+	logrus.Infof("转速:%d %", (dutyLen/cycleLen)*100)
+	pwmP.DutyCycle(dutyLen, cycleLen)
+	logrus.Info("持续运行，等待停止信号...")
+	<-ch
+	logrus.Info("停止运行")
 }
 
-func GoForwardWithPWM() {
+// goForward 以给定功率前进，功率值： dutyLen / cycleLen
+func goForward(m machine, dutyLen uint32) {
+	logrus.Infof("转子名称：%s", m.name)
+	running(m.pwm, m.in1, m.in2, dutyLen, func(pin1, pin2 rpio.Pin) {
+		rpio.WritePin(pin1, rpio.High)
+		rpio.WritePin(pin2, rpio.Low)
+	}, runningCh)
+}
+
+// goForward 以给定功率后退，功率值： dutyLen / cycleLen
+func goInvert(m machine, dutyLen uint32) {
+	running(m.pwm, m.in1, m.in2, dutyLen, func(pin1, pin2 rpio.Pin) {
+		rpio.WritePin(pin1, rpio.Low)
+		rpio.WritePin(pin2, rpio.High)
+	}, runningCh)
+}
+
+var calculateDegree = func(degree uint32, rate float32) uint32 {
+	return uint32(float32(DutyLen) * float32(degree/maxDegree) * rate)
+}
+
+type pair struct {
+	m machine
+	r float32
+}
+
+// wheel 转弯的处理方法
+func wheel(degree uint32, ps [4]pair, callback func(m machine, dutyLen uint32)) {
+	if degree > 40 {
+		degree = 40
+	}
+	if degree <= 0 {
+		return
+	}
 	var wg sync.WaitGroup
-	wg.Add(len(machines))
-	for _, mc := range machines {
-		go func(m machine) {
-			initPin(m.pwm, m.in1, m.in2)
-			wg.Done()
-		}(mc)
+	wg.Add(4)
+	var wheelRun = func(m machine, d uint32, r float32) {
+		callback(m, calculateDegree(d, r))
+		wg.Done()
+	}
+	for _, p := range ps {
+		go wheelRun(p.m, degree, p.r)
 	}
 	wg.Wait()
 }
