@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// LeftForward 左转 左前轮减速到70%，左后轮减速到65%，右前轮减速到85%，右后轮全速运转
+// LeftForward 左转 左前转子减速到70%，左后转子减速到65%，右前转子减速到85%，右后转子全速运转
 // degree 左转读书，最大为40°
 func LeftForward(degree uint32) {
 	ps := [4]pair{
@@ -17,7 +17,7 @@ func LeftForward(degree uint32) {
 	wheel(degree, ps, goForward)
 }
 
-// RightForward 右转 右前轮减速到70%，右后轮减速到65%，左前轮减速到8%，左后轮全速运转
+// RightForward 右转 右前转子减速到70%，右后转子减速到65%，左前转子减速到8%，左后转子全速运转
 func RightForward(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 0.7},
@@ -28,7 +28,7 @@ func RightForward(degree uint32) {
 	wheel(degree, ps, goForward)
 }
 
-// DiveForward 俯冲 前2轮减速到80%，后2轮全速运转
+// DiveForward 俯冲 前2转子减速到80%，后2转子全速运转
 func DiveForward(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 0.8},
@@ -39,7 +39,7 @@ func DiveForward(degree uint32) {
 	wheel(degree, ps, goForward)
 }
 
-// ClimbForward 攀爬 前2轮全速运转，后2轮减速到80%
+// ClimbForward 攀爬 前2转子全速运转，后2转子减速到80%
 func ClimbForward(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 1},
@@ -65,7 +65,7 @@ func GoForwardWithPWM(duty uint32) {
 	wg.Wait()
 }
 
-// LeftInvert 左转 左前轮减速到70%，左后轮减速到65%，右前轮减速到85%，右后轮全速运转
+// LeftInvert 左转 左前转子减速到70%，左后转子减速到65%，右前转子减速到85%，右后转子全速运转
 // degree 左转读书，最大为40°
 func LeftInvert(degree uint32) {
 	ps := [4]pair{
@@ -77,7 +77,7 @@ func LeftInvert(degree uint32) {
 	wheel(degree, ps, goInvert)
 }
 
-// RightInvert 右转 右前轮减速到70%，右后轮减速到65%，左前轮减速到8%，左后轮全速运转
+// RightInvert 右转 右前转子减速到70%，右后转子减速到65%，左前转子减速到8%，左后转子全速运转
 func RightInvert(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 0.7},
@@ -88,7 +88,7 @@ func RightInvert(degree uint32) {
 	wheel(degree, ps, goInvert)
 }
 
-// DiveInvert 俯冲 前2轮减速到80%，后2轮全速运转
+// DiveInvert 俯冲 前2转子减速到80%，后2转子全速运转
 func DiveInvert(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 0.8},
@@ -99,7 +99,7 @@ func DiveInvert(degree uint32) {
 	wheel(degree, ps, goInvert)
 }
 
-// ClimbInvert 攀爬 后2轮全速运转，后2轮减速到80%
+// ClimbInvert 攀爬 后2转子全速运转，后2转子减速到80%
 func ClimbInvert(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 1},
