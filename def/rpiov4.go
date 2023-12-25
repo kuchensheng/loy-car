@@ -30,8 +30,8 @@ type machine struct {
 }
 
 var (
-	frontLeft  = machine{"左前轮", 12, 20, 21}
-	frontRight = machine{"前右轮", 19, 26, 06}
+	frontLeft  = machine{"左前轮", 12, 20, 16}
+	frontRight = machine{"前右轮", 19, 06, 26}
 	rearLeft   = machine{"后左轮", 18, 23, 24}
 	rearRight  = machine{"后右轮", 13, 22, 27}
 	// machines 配置好的4个直流电机引脚
@@ -67,14 +67,12 @@ func running(pwm, in1, in2 uint8, dutyLen uint32, forward bool, ch chan bool) {
 		rpio.WritePin(pin1, rpio.Low)
 		rpio.WritePin(pin2, rpio.High)
 	}
-	defer func() {
-		pin1.Low()
-		logrus.Infof("设置[%v]为低电位", pin1)
-		pin2.Low()
-		logrus.Infof("设置[%v]为低电位", pin2)
-		pwmP.Low()
-		logrus.Infof("设置[%v]为低电位", pwmP)
-	}()
+	defer func(p ...*rpio.Pin) {
+		for _, pin := range p {
+			logrus.Infof("设置[%v]为低电位", pin)
+			pin.Low()
+		}
+	}(&pin1, &pin2, &pwmP)
 	logrus.Infof("pwmP:%v,pin1:%v,pin2:%v", pwmP, pin1, pin2)
 	pwmP.Mode(rpio.Output)
 	rpio.WritePin(pwmP, rpio.High)

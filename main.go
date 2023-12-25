@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/kuchensheng/loy-car/def"
 	"github.com/sirupsen/logrus"
 	"periph.io/x/conn/v3/driver/driverreg"
@@ -16,14 +15,10 @@ var testRunning = func(optionName string, dutyLen, degree uint32, callback func(
 
 func main() {
 	_, _ = driverreg.Init()
-	testRunning("开机", 0, 0, def.GoForwardWithPWM)
+	//testRunning("开机", 0, 0, def.GoForwardWithPWM)
 
-	for i := 0; i < 32; i = i + 10 {
-		testRunning(fmt.Sprintf("加速到：%d", i+1), uint32(i+1), 0, def.GoForwardWithPWM)
-	}
-	//
-	//logrus.Info("直行，全速前进")
-	//testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
+	logrus.Info("直行，全速前进")
+	testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
 	//
 	//logrus.Info("减速10%，并左转10°")
 	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
