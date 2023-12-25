@@ -39,7 +39,7 @@ func DiveForward(degree uint32) {
 	wheel(degree, ps, goForward)
 }
 
-// ClimbForward 攀爬 后2轮全速运转，后2轮减速到80%
+// ClimbForward 攀爬 前2轮全速运转，后2轮减速到80%
 func ClimbForward(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 1},
@@ -51,13 +51,14 @@ func ClimbForward(degree uint32) {
 }
 
 // GoForwardWithPWM 直行
-func GoForwardWithPWM() {
+func GoForwardWithPWM(duty uint32) {
+	DutyLen = duty
 	var wg sync.WaitGroup
 	wg.Add(len(machines))
 	for _, mc := range machines {
 		go func(m machine) {
 			logrus.Infof("转子[%s]启动...", m.name)
-			goForward(m, DutyLen)
+			goForward(m, duty)
 			wg.Done()
 		}(mc)
 	}
@@ -110,13 +111,14 @@ func ClimbInvert(degree uint32) {
 }
 
 // GoInvertWithPWM 后退 直行
-func GoInvertWithPWM() {
+func GoInvertWithPWM(dutyLen uint32) {
+	DutyLen = dutyLen
 	var wg sync.WaitGroup
 	wg.Add(len(machines))
 	for _, mc := range machines {
 		go func(m machine) {
 			logrus.Infof("转子[%s]启动...", m.name)
-			goInvert(m, DutyLen)
+			goInvert(m, dutyLen)
 			wg.Done()
 		}(mc)
 	}
