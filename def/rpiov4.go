@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stianeikeland/go-rpio/v4"
 	"sync"
+	"time"
 )
 
 const (
@@ -51,15 +52,22 @@ var (
 	runningCh = make(chan bool)
 )
 
-func running(pwm, in1, in2 uint8, dutyLen uint32, forward func(pin1, pin2 rpio.Pin), ch chan bool) {
+func running(pwm, in1, in2 uint8, dutyLen uint32, forward bool, ch chan bool) {
 	if dutyLen > cycleLen {
 		dutyLen = cycleLen
 	}
 	pwmP := rpio.Pin(pwm)
 	pin1 := rpio.Pin(in1)
 	pin2 := rpio.Pin(in2)
+	//控制正转还是倒转
+	if forward {
+		rpio.WritePin(pin1, rpio.High)
+		rpio.WritePin(pin2, rpio.Low)
+	} else {
+		rpio.WritePin(pin1, rpio.Low)
+		rpio.WritePin(pin2, rpio.High)
+	}
 	defer func() {
-
 		pin1.Low()
 		logrus.Infof("设置[%v]为低电位", pin1)
 		pin2.Low()
@@ -68,32 +76,28 @@ func running(pwm, in1, in2 uint8, dutyLen uint32, forward func(pin1, pin2 rpio.P
 		logrus.Infof("设置[%v]为低电位", pwmP)
 	}()
 	logrus.Infof("pwmP:%v,pin1:%v,pin2:%v", pwmP, pin1, pin2)
-	//控制正转还是倒转
-	forward(pin1, pin2)
+	pwmP.Mode(rpio.Output)
+	rpio.WritePin(pwmP, rpio.High)
+	time.Sleep(2 * time.Second)
 	pwmP.Mode(rpio.Pwm)
 	pwmP.Freq(freq)
-	logrus.Infof("转速:%d %", (dutyLen/cycleLen)*100)
+	logrus.Infof("转速:%.2f %", float32(dutyLen/cycleLen)*100)
 	pwmP.DutyCycle(dutyLen, cycleLen)
 	logrus.Info("持续运行，等待停止信号...")
-	<-ch
+	time.Sleep(10 * time.Second)
+	//<-ch
 	logrus.Info("停止运行")
 }
 
 // goForward 以给定功率前进，功率值： dutyLen / cycleLen
 func goForward(m machine, dutyLen uint32) {
 	logrus.Infof("转子名称：%s", m.name)
-	running(m.pwm, m.in1, m.in2, dutyLen, func(pin1, pin2 rpio.Pin) {
-		rpio.WritePin(pin1, rpio.High)
-		rpio.WritePin(pin2, rpio.Low)
-	}, runningCh)
+	running(m.pwm, m.in1, m.in2, dutyLen, true, runningCh)
 }
 
 // goForward 以给定功率后退，功率值： dutyLen / cycleLen
 func goInvert(m machine, dutyLen uint32) {
-	running(m.pwm, m.in1, m.in2, dutyLen, func(pin1, pin2 rpio.Pin) {
-		rpio.WritePin(pin1, rpio.Low)
-		rpio.WritePin(pin2, rpio.High)
-	}, runningCh)
+	running(m.pwm, m.in1, m.in2, dutyLen, false, runningCh)
 }
 
 var calculateDegree = func(degree uint32, rate float32) uint32 {

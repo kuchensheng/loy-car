@@ -18,52 +18,52 @@ func main() {
 	_, _ = driverreg.Init()
 	testRunning("开机", 0, 0, def.GoForwardWithPWM)
 
-	for i := 0; i < 32; i++ {
+	for i := 0; i < 32; i = i + 10 {
 		testRunning(fmt.Sprintf("加速到：%d", i+1), uint32(i+1), 0, def.GoForwardWithPWM)
 	}
-
-	logrus.Info("直行，全速前进")
-	testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
-
-	logrus.Info("减速10%，并左转10°")
-	testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-	testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
-
-	logrus.Info("再减速10%，并再左转10°")
-	testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-	testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
-
-	logrus.Info("再减速10%，并再左转10°")
-	testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-	testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
-
-	logrus.Info("右转10°，并加速10%")
-	testRunning("右转10°", def.DutyLen, 10, def.RightForward)
-	testRunning("加速10%", def.DutyLen+def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-
-	logrus.Info("右转10°，并加速10%")
-	testRunning("右转10°", def.DutyLen, 10, def.RightForward)
-	testRunning("加速10%", def.DutyLen+def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-
-	logrus.Info("右转10°，并加速10%")
-	testRunning("右转10°", def.DutyLen, 10, def.RightForward)
-	testRunning("加速10%", def.DutyLen+def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-
-	logrus.Info("停止")
-	testRunning("停止", 0, 0, def.GoForwardWithPWM)
-
-	logrus.Info("后退")
-	testRunning("后退", 16, 0, def.GoInvertWithPWM)
-
-	logrus.Info("后退并左转舵")
-	testRunning("左转舵", 16, 10, def.LeftInvert)
-
-	logrus.Info("后退并右转舵")
-	testRunning("右转舵", 16, 10, def.RightInvert)
-
-	logrus.Infof("俯冲")
-	testRunning("俯冲", 32, 0, def.DiveForward)
-
-	logrus.Infof("攀爬")
-	testRunning("攀爬", 32, 0, def.ClimbForward)
+	//
+	//logrus.Info("直行，全速前进")
+	//testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
+	//
+	//logrus.Info("减速10%，并左转10°")
+	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
+	//testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
+	//
+	//logrus.Info("再减速10%，并再左转10°")
+	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
+	//testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
+	//
+	//logrus.Info("再减速10%，并再左转10°")
+	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
+	//testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
+	//
+	//logrus.Info("右转10°，并加速10%")
+	//testRunning("右转10°", def.DutyLen, 10, def.RightForward)
+	//testRunning("加速10%", def.DutyLen+def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
+	//
+	//logrus.Info("右转10°，并加速10%")
+	//testRunning("右转10°", def.DutyLen, 10, def.RightForward)
+	//testRunning("加速10%", def.DutyLen+def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
+	//
+	//logrus.Info("右转10°，并加速10%")
+	//testRunning("右转10°", def.DutyLen, 10, def.RightForward)
+	//testRunning("加速10%", def.DutyLen+def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
+	//
+	//logrus.Info("停止")
+	//testRunning("停止", 0, 0, def.GoForwardWithPWM)
+	//
+	//logrus.Info("后退")
+	//testRunning("后退", 16, 0, def.GoInvertWithPWM)
+	//
+	//logrus.Info("后退并左转舵")
+	//testRunning("左转舵", 16, 10, def.LeftInvert)
+	//
+	//logrus.Info("后退并右转舵")
+	//testRunning("右转舵", 16, 10, def.RightInvert)
+	//
+	//logrus.Infof("俯冲")
+	//testRunning("俯冲", 32, 0, def.DiveForward)
+	//
+	//logrus.Infof("攀爬")
+	//testRunning("攀爬", 32, 0, def.ClimbForward)
 }
