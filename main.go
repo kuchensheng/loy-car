@@ -9,7 +9,11 @@ import (
 
 var testRunning = func(optionName string, dutyLen, degree uint32, callback func(params uint32)) {
 	logrus.Infof("操作:%s", optionName)
-	callback(dutyLen)
+	param := dutyLen
+	if degree != 0 {
+		param = degree
+	}
+	callback(param)
 	time.Sleep(time.Second * 2)
 }
 
