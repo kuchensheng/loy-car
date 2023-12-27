@@ -77,7 +77,7 @@ func (m *machine) running(dutyLen uint32) {
 	defer func(p ...*rpio.Pin) {
 		m.state = false
 		for _, pin := range p {
-			logrus.Infof("设置[%v]为低电位", pin)
+			logrus.Infof("设置[%v]为低电位", *pin)
 			pin.Mode(rpio.Output)
 			pin.Low()
 		}
