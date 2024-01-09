@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stianeikeland/go-rpio/v4"
 	"sync"
+	"time"
 )
 
 const (
@@ -11,6 +12,15 @@ const (
 )
 
 func init() {
+	logrus.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: time.RFC3339,
+		FieldMap: logrus.FieldMap{
+			"time":   "timestamp",
+			"level":  "level",
+			"msg":    "message",
+			"caller": "caller",
+		},
+	})
 	if e := rpio.Open(); e != nil {
 		logrus.Fatal("无法打开rpio,%v", e)
 	}
@@ -37,7 +47,7 @@ type machine struct {
 var (
 	frontLeft  = &machine{"左前轮", rpio.Pin(12), rpio.Pin(20), rpio.Pin(16), false, true, make(chan bool)}
 	frontRight = &machine{"前右轮", rpio.Pin(19), rpio.Pin(06), rpio.Pin(26), false, true, make(chan bool)}
-	rearLeft   = &machine{"后左轮", rpio.Pin(18), rpio.Pin(23), rpio.Pin(24), false, true, make(chan bool)}
+	rearLeft   = &machine{"后左轮", rpio.Pin(18), rpio.Pin(24), rpio.Pin(23), false, true, make(chan bool)}
 	rearRight  = &machine{"后右轮", rpio.Pin(13), rpio.Pin(22), rpio.Pin(27), false, true, make(chan bool)}
 	// machines 配置好的4个直流电机引脚
 	machines = []*machine{frontLeft, frontRight, rearLeft, rearRight}
@@ -52,7 +62,7 @@ var (
 	//最大偏转角度
 	maxDegree uint32 = 40
 
-	currentDegree uint32 = 0
+	currentDegree uint32 = maxDegree
 )
 
 func (m *machine) running(dutyLen uint32) {
@@ -64,7 +74,7 @@ func (m *machine) running(dutyLen uint32) {
 		logrus.Infof("转子[%s]的状态为[%v],发送停止信息", m.name, m.state)
 		m.signal <- true
 	}
-	logrus.Infof("将转子[%s]的状态设置为运行中", m.name)
+	logrus.Infof("将转子[%s]的状态设置为运行中,dutyLen:%d", m.name, dutyLen)
 	m.state = true
 	//控制正转还是倒转
 	if m.forward {
@@ -82,18 +92,18 @@ func (m *machine) running(dutyLen uint32) {
 			pin.Low()
 		}
 	}(&m.in1, &m.in2, &m.pwm)
-	logrus.Infof("machine:%v", m)
+
 	m.pwm.Mode(rpio.Pwm)
 	m.pwm.Freq(freq)
 
-	logrus.Infof("转速:%.2f %", float32(dutyLen/cycleLen)*100)
+	logrus.Infof("转速:%f %", float32(dutyLen/cycleLen)*100)
 	m.pwm.DutyCycle(dutyLen, cycleLen)
 	logrus.Info("持续运行，等待停止信号...")
 loop:
 	for {
 		select {
 		case <-m.signal:
-			logrus.Infof("转子[%s]收到停止信号,携程即将停止运行", m.name)
+			logrus.Infof("转子[%s]收到停止信号,协程即将停止运行", m.name)
 			break loop
 		default:
 			//持续运行
@@ -120,7 +130,7 @@ func goInvert(m *machine, dutyLen uint32) {
 type pair struct {
 	m *machine
 	//r 根据偏转角度计算各个轮子的运动速度
-	r float32
+	dutyLen uint32
 }
 
 func newPair(m *machine) pair {
@@ -136,7 +146,7 @@ func wheel(ps [4]pair) {
 		wg.Done()
 	}
 	for _, p := range ps {
-		go wheelRun(p.m, uint32(p.r))
+		go wheelRun(p.m, p.dutyLen)
 	}
 	wg.Wait()
 }

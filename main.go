@@ -8,13 +8,13 @@ import (
 )
 
 var testRunning = func(optionName string, dutyLen, degree uint32, callback func(params uint32)) {
-	logrus.Infof("操作:%s", optionName)
+	logrus.Infof("操作:%s，dutyLen:%d,degree:%d", optionName, dutyLen, degree)
 	param := dutyLen
 	if degree != 0 {
 		param = degree
 	}
-	callback(param)
-	time.Sleep(time.Second * 2)
+	go callback(param)
+	time.Sleep(time.Second * 5)
 }
 
 func main() {
@@ -23,10 +23,11 @@ func main() {
 
 	logrus.Info("直行，全速前进")
 	testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
+	def.StopWithPWM()
+
 	//
-	//logrus.Info("减速10%，并左转10°")
-	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
-	//testRunning("左转10°", def.DutyLen, 10, def.LeftForward)
+	logrus.Info("减速10%，并左转10°")
+	testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.LeftForward)
 	//
 	//logrus.Info("再减速10%，并再左转10°")
 	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
@@ -65,4 +66,8 @@ func main() {
 	//
 	//logrus.Infof("攀爬")
 	//testRunning("攀爬", 32, 0, def.ClimbForward)
+
+	def.StopWithPWM()
+	time.Sleep(time.Second)
+
 }

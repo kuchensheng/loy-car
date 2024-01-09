@@ -13,10 +13,10 @@ var wheelFunc = func(degree, rate float32) float32 {
 // degree 左转读书，最大为40°
 func LeftForward(degree uint32) {
 	ps := [4]pair{
-		{frontLeft, wheelFunc(float32(degree), 0.75)},
-		{rearLeft, wheelFunc(float32(degree), 0.65)},
-		{frontRight, wheelFunc(float32(degree), 0.9)},
-		{rearRight, 1},
+		{frontLeft, DutyLen - 10*degree/maxDegree},
+		{rearLeft, DutyLen - 15*degree/maxDegree},
+		{frontRight, DutyLen - 5*degree/maxDegree},
+		{rearRight, DutyLen},
 	}
 	wheel(ps)
 }
@@ -24,9 +24,9 @@ func LeftForward(degree uint32) {
 // RightForward 右转 右前转子减速到70%，右后转子减速到65%，左前转子减速到8%，左后转子全速运转
 func RightForward(degree uint32) {
 	ps := [4]pair{
-		{frontRight, wheelFunc(float32(degree), 0.75)},
-		{rearRight, wheelFunc(float32(degree), 0.65)},
-		{frontLeft, wheelFunc(float32(degree), 0.9)},
+		{frontRight, DutyLen - 10*degree/maxDegree},
+		{rearRight, DutyLen - 15*degree/maxDegree},
+		{frontLeft, DutyLen - 5*degree/maxDegree},
 		{rearLeft, 1},
 	}
 	wheel(ps)
@@ -35,10 +35,10 @@ func RightForward(degree uint32) {
 // DiveForward 俯冲 前2转子减速到80%，后2转子全速运转
 func DiveForward(degree uint32) {
 	ps := [4]pair{
-		{frontRight, wheelFunc(float32(degree), 0.8)},
-		{frontLeft, wheelFunc(float32(degree), 0.8)},
-		{rearRight, 1},
-		{rearLeft, 1},
+		{frontRight, DutyLen - 10*degree/maxDegree},
+		{frontLeft, DutyLen - 10*degree/maxDegree},
+		{rearRight, DutyLen},
+		{rearLeft, DutyLen},
 	}
 	wheel(ps)
 }
@@ -48,15 +48,14 @@ func ClimbForward(degree uint32) {
 	ps := [4]pair{
 		{frontRight, 1},
 		{frontLeft, 1},
-		{rearRight, wheelFunc(float32(degree), 0.8)},
-		{rearLeft, wheelFunc(float32(degree), 0.8)},
+		{rearRight, DutyLen - 10*degree/maxDegree},
+		{rearLeft, DutyLen - 10*degree/maxDegree},
 	}
 	wheel(ps)
 }
 
 // GoForwardWithPWM 直行
 func GoForwardWithPWM(duty uint32) {
-	DutyLen = duty
 	var wg sync.WaitGroup
 	wg.Add(len(machines))
 	for _, mc := range machines {
@@ -73,10 +72,10 @@ func GoForwardWithPWM(duty uint32) {
 // degree 左转读书，最大为40°
 func LeftInvert(degree uint32) {
 	ps := [4]pair{
-		{frontLeft, wheelFunc(float32(degree), 0.7)},
-		{rearLeft, wheelFunc(float32(degree), 0.65)},
-		{frontRight, wheelFunc(float32(degree), 0.85)},
-		{rearRight, 1},
+		{frontLeft, DutyLen - 10*degree/maxDegree},
+		{rearLeft, DutyLen - 15*degree/maxDegree},
+		{frontRight, DutyLen - 5*degree/maxDegree},
+		{rearRight, DutyLen},
 	}
 	wheel(ps)
 }
@@ -84,10 +83,10 @@ func LeftInvert(degree uint32) {
 // RightInvert 右转 右前转子减速到70%，右后转子减速到65%，左前转子减速到80%，左后转子全速运转
 func RightInvert(degree uint32) {
 	ps := [4]pair{
-		{frontRight, wheelFunc(float32(degree), 0.7)},
-		{rearRight, wheelFunc(float32(degree), 0.65)},
-		{frontLeft, wheelFunc(float32(degree), 0.8)},
-		{rearLeft, 1},
+		{frontRight, DutyLen - 10*degree/maxDegree},
+		{rearRight, DutyLen - 15*degree/maxDegree},
+		{frontLeft, DutyLen - 5*degree/maxDegree},
+		{rearLeft, DutyLen},
 	}
 	wheel(ps)
 }
@@ -95,10 +94,10 @@ func RightInvert(degree uint32) {
 // DiveInvert 俯冲 前2转子减速到80%，后2转子全速运转
 func DiveInvert(degree uint32) {
 	ps := [4]pair{
-		{frontRight, wheelFunc(float32(degree), 0.8)},
-		{frontLeft, wheelFunc(float32(degree), 0.8)},
-		{rearRight, 1},
-		{rearLeft, 1},
+		{frontRight, DutyLen - 10*degree/maxDegree},
+		{frontLeft, DutyLen - 10*degree/maxDegree},
+		{rearRight, DutyLen},
+		{rearLeft, DutyLen},
 	}
 	wheel(ps)
 }
@@ -106,17 +105,16 @@ func DiveInvert(degree uint32) {
 // ClimbInvert 攀爬 后2转子全速运转，后2转子减速到80%
 func ClimbInvert(degree uint32) {
 	ps := [4]pair{
-		{frontRight, 1},
-		{frontLeft, 1},
-		{rearRight, wheelFunc(float32(degree), 0.8)},
-		{rearLeft, wheelFunc(float32(degree), 0.8)},
+		{frontRight, DutyLen},
+		{frontLeft, DutyLen},
+		{rearRight, DutyLen - 10*degree/maxDegree},
+		{rearLeft, DutyLen - 10*degree/maxDegree},
 	}
 	wheel(ps)
 }
 
 // GoInvertWithPWM 后退 直行
 func GoInvertWithPWM(dutyLen uint32) {
-	DutyLen = dutyLen
 	var wg sync.WaitGroup
 	wg.Add(len(machines))
 	for _, mc := range machines {
