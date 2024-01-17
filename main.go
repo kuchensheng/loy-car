@@ -19,15 +19,19 @@ var testRunning = func(optionName string, dutyLen, degree uint32, callback func(
 
 func main() {
 	_, _ = driverreg.Init()
+	def.Reset()
+	def.Left(45)
+	def.Right(45)
+
 	//testRunning("开机", 0, 0, def.GoForwardWithPWM)
 
-	logrus.Info("直行，全速前进")
-	testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
-	def.StopWithPWM()
-
+	//logrus.Info("直行，全速前进")
+	//testRunning("全速前进", 32, 0, def.GoForwardWithPWM)
+	//def.StopWithPWM()
 	//
-	logrus.Info("减速10%，并左转10°")
-	testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.LeftForward)
+	////
+	//logrus.Info("减速10%，并左转10°")
+	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.LeftForward)
 	//
 	//logrus.Info("再减速10%，并再左转10°")
 	//testRunning("减速10%", def.DutyLen-def.DutyLen/uint32(10), 0, def.GoForwardWithPWM)
