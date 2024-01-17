@@ -96,7 +96,7 @@ func (m *machine) running(dutyLen uint32) {
 	m.pwm.Mode(rpio.Pwm)
 	m.pwm.Freq(freq)
 
-	logrus.Infof("转速:%f %", float32(dutyLen/cycleLen)*100)
+	logrus.Infof("转速:%.1f %", float32(dutyLen*100/cycleLen))
 	m.pwm.DutyCycle(dutyLen, cycleLen)
 	logrus.Info("持续运行，等待停止信号...")
 loop:
